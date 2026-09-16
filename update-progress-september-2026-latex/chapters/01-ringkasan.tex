@@ -1,0 +1,11 @@
+\chapter{Ringkasan Proyek}
+
+AuditChain Gateway adalah sistem middleware yang berfungsi sebagai API Gateway untuk menerima, memproses, dan mengunci log audit dari berbagai sistem klien, seperti SIMRS, sistem rumah sakit, sistem geospasial, dan sistem operasional lain, secara immutable ke dalam jaringan Hyperledger Fabric Blockchain.
+
+Sistem ini menggunakan arsitektur multi-tenant berbasis SaaS, mendukung ingestion data melalui Change Data Capture (CDC) berbasis Kafka dan Debezium per klien, serta menerapkan mekanisme verifikasi integritas data berlapis atau multi-layer verification.
+
+\architecturediagram
+
+Secara umum, AuditChain Gateway bertujuan menjadi lapisan audit trail eksternal yang tidak mengganggu aplikasi utama klien. Sistem klien tetap berjalan seperti biasa, sedangkan perubahan data yang terjadi pada database dapat ditangkap, dinormalisasi, di-hash, dikelompokkan ke dalam Merkle Tree, dan di-anchor ke blockchain.
+
+Update dokumen ini disusun dari isi laporan progress September 2026 sebelumnya, lalu dilengkapi dengan beberapa bagian tambahan yang lebih baru, terutama terkait actor tracking, Web Users Activity Monitoring, testing Actor Flow V2, dan roadmap penyelesaian core sistem.

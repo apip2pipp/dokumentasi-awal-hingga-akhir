@@ -1,0 +1,99 @@
+\chapter{Update Terbaru}
+
+\section{Penambahan Kolom Pemetaan Actor Pada Pendaftaran Klien}
+
+Pada update ini, dilakukan penyempurnaan terhadap proses registrasi klien baru dengan menambahkan kolom-kolom konfigurasi pemetaan field actor atau pelaku perubahan data yang lebih granular berdasarkan jenis operasi INSERT, UPDATE, dan DELETE.
+
+Sebelumnya, sistem hanya menggunakan satu field actor umum dengan opsi fallback. Melalui update ini, admin dapat mengisi field mapping khusus untuk setiap jenis aksi, sehingga pencatatan pelaku pada log audit menjadi lebih akurat sesuai struktur tabel database masing-masing klien.
+
+\begin{longtable}{p{4cm}p{9cm}}
+\toprule
+\textbf{Kolom} & \textbf{Fungsi} \\
+\midrule
+Insert Actor & Field yang digunakan untuk mengambil nilai actor saat terjadi operasi INSERT pada tabel klien. \\
+\midrule
+Update Actor & Field yang digunakan untuk mengambil nilai actor saat terjadi operasi UPDATE pada tabel klien. \\
+\midrule
+Delete Actor & Field yang digunakan untuk mengambil nilai actor saat terjadi operasi DELETE pada tabel klien. \\
+\midrule
+Placeholder Actor & Nilai contoh atau petunjuk pengisian bagi admin, misalnya \texttt{user\_id}, \texttt{created\_by}, \texttt{updated\_by}, atau \texttt{deleted\_by}. \\
+\bottomrule
+\end{longtable}
+
+Tujuan penambahan fitur ini:
+
+\begin{enumerate}
+    \item Mengakomodasi kasus di mana kolom pelaku perubahan berbeda-beda tergantung jenis operasi, misalnya \texttt{created\_by}, \texttt{updated\_by}, dan \texttt{deleted\_by}.
+    \item Meningkatkan akurasi data actor yang tercatat pada \texttt{audit\_logs}, khususnya untuk klien dengan struktur tabel yang tidak seragam.
+    \item Memberikan panduan pengisian yang lebih jelas bagi admin melalui placeholder pada form pendaftaran, sehingga mengurangi kesalahan konfigurasi field mapping saat onboarding klien baru.
+\end{enumerate}
+
+\placeholderimage{Screenshot form Register Client dengan kolom Insert Actor, Update Actor, Delete Actor, dan Placeholder Actor}{Masukkan screenshot form registrasi client setelah field actor per operasi ditambahkan.}
+
+\placeholderimage{Screenshot hasil log audit dengan actor sesuai jenis aksi}{Masukkan screenshot audit logs yang menunjukkan actor berbeda untuk INSERT, UPDATE, atau DELETE.}
+
+\section{Penyempurnaan Web Users Activity Monitoring}
+
+Update tambahan yang dapat dimasukkan pada laporan September adalah perubahan menu Web Users dari daftar user sederhana menjadi halaman activity monitoring.
+
+Pada versi sebelumnya, Web Users hanya menampilkan user yang terdeteksi dari CDC. Setelah penyempurnaan, frontend juga membaca recent audit logs, lalu mencocokkan actor pada audit log dengan username, email, atau full name dari user yang terdeteksi.
+
+\subsection{Perubahan Utama}
+
+\begin{itemize}
+    \item Tabel Web Users menampilkan User, Username, Email, Last Activity, Action Time, dan Status.
+    \item Status user tidak hanya berdasarkan kelengkapan identitas, tetapi juga berdasarkan aktivitas terakhir.
+    \item Row user dapat diklik untuk membuka drawer detail dari sisi kanan.
+    \item Drawer menampilkan identity, latest activity, source, dan raw attributes.
+    \item Export CSV sudah membawa data aktivitas seperti action time, username, full name, email, action type, resource, dan action result.
+\end{itemize}
+
+\subsection{Status Activity}
+
+\begin{longtable}{p{4cm}p{9cm}}
+\toprule
+\textbf{Status} & \textbf{Makna} \\
+\midrule
+Success & User memiliki aktivitas terbaru dan tidak terdeteksi issue dari status atau integrity. \\
+\midrule
+Pending & Aktivitas ada, tetapi masih pending, received, atau belum dicek. \\
+\midrule
+Needs Review & Aktivitas memiliki indikasi gagal, invalid, tampered, atau error. \\
+\midrule
+No Activity & User terdeteksi, tetapi belum memiliki audit log yang berhasil dicocokkan. \\
+\bottomrule
+\end{longtable}
+
+\placeholderimage{Screenshot Web Users Activity Monitoring}{Masukkan screenshot halaman Web Users yang sudah menampilkan Last Activity, Action Time, dan Status.}
+
+\placeholderimage{Screenshot drawer detail Web Users}{Masukkan screenshot drawer kanan yang menampilkan detail identity dan latest activity.}
+
+\section{Rencana Endpoint Backend Untuk User Activity}
+
+Saat ini matching activity masih dilakukan di frontend dengan pendekatan heuristic. Untuk tahap produksi, endpoint backend khusus lebih disarankan agar pencocokan user dan audit log dilakukan secara lebih presisi.
+
+\begin{lstlisting}
+GET /api/dashboard/my-users/activity
+\end{lstlisting}
+
+Manfaat endpoint khusus:
+
+\begin{enumerate}
+    \item Frontend tidak perlu lagi melakukan matching heuristic.
+    \item Backend dapat menggunakan actor mapping yang lebih akurat.
+    \item Query dapat dipaginasi dan dioptimasi langsung di database.
+    \item Activity history per user dapat dikembangkan menjadi tab detail tersendiri.
+\end{enumerate}
+
+\section{Inovasi Baru: Deteksi Anomali Berbasis AI dan Zero-Knowledge Proof (ZKP)}
+
+Sebagai bagian dari pengembangan keberlanjutan AuditChain Gateway, beberapa inovasi baru mulai diinisiasi untuk meningkatkan keamanan, kecerdasan, dan privasi sistem audit trail:
+
+\subsection{AI-Powered Anomaly Detection}
+Sistem merencanakan pemanfaatan aliran data event dari Kafka untuk melakukan analisis secara \textit{real-time} menggunakan model \textit{Machine Learning} (seperti algoritma \textit{Isolation Forest} atau \textit{Autoencoder}). Inovasi ini memungkinkan sistem untuk mendeteksi pola aktivitas yang tidak wajar (contoh: penghapusan data secara masal, frekuensi pembaruan yang tidak normal, atau akses di luar kewajaran jam operasional). Deteksi dini ini akan memicu \textit{alert} langsung ke \textit{Dashboard Admin} bahkan sebelum anomali data tersebut di-\textit{anchor} ke jaringan blockchain.
+
+\subsection{Zero-Knowledge Proof (ZKP) untuk Privasi Data Audit}
+Khusus untuk sistem klien dengan kerahasiaan data yang tinggi seperti SIMRS (Sistem Informasi Manajemen Rumah Sakit) atau sistem geospasial, sistem akan mengintegrasikan skema \textit{Zero-Knowledge Proof}. Teknologi ini memungkinkan auditor eksternal untuk melakukan verifikasi integritas data dan memvalidasi transaksi log pada Hyperledger Fabric tanpa perlu mengekspos isi data sensitif secara gamblang, sehingga menjamin kepatuhan terhadap regulasi privasi data seperti UU PDP (Perlindungan Data Pribadi).
+
+\subsection{Dynamic Smart Contract Rule Engine}
+Inovasi penyempurnaan pada \textit{Chaincode} Hyperledger Fabric dimana \textit{rule compliance} dapat didefinisikan secara dinamis oleh pengguna melalui antarmuka \textit{dashboard}. Validasi kepatuhan secara regulasi akan dijalankan otomatis sebagai \textit{smart contract constraint} pada saat proses konsensus \textit{anchoring} batch \textit{Merkle Tree} terjadi, menolak \textit{batch} yang dinilai cacat secara logik bisnis tanpa memerlukan re-deploy chaincode.

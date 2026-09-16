@@ -1,0 +1,83 @@
+\chapter{Rencana Selanjutnya}
+
+\section{Rencana Dari Laporan September}
+
+Rencana lanjutan yang tercatat pada laporan progress September adalah:
+
+\begin{enumerate}
+    \item Integrasi penuh mapping actor per aksi ke pipeline Kafka Consumer dan Normalizer.
+    \item Pengujian end-to-end terhadap klien dengan struktur tabel actor yang berbeda-beda.
+    \item Penyempurnaan dokumentasi API dan panduan onboarding klien baru.
+    \item Review keamanan pra-produksi, termasuk CORS whitelist, validasi JWT secret, dan konfigurasi akses.
+\end{enumerate}
+
+\roadmapdiagram
+
+\section{Rencana Update Terbaru}
+
+Berdasarkan review terbaru, roadmap dapat dibagi menjadi tiga prioritas.
+
+\subsection{Prioritas P0}
+
+\begin{itemize}
+    \item Menyelesaikan integrasi actor mapping per operasi ke Kafka consumer dan normalizer.
+    \item Menyimpan actor mentah dan actor display secara terpisah.
+    \item Membuat endpoint backend khusus \texttt{/api/dashboard/my-users/activity}.
+    \item Menjalankan testing Actor Flow V2 menggunakan tabel actor-aware.
+    \item Menambahkan pipeline health monitoring dasar, seperti heartbeat, connector status, last event time, dan consumer lag.
+\end{itemize}
+
+\subsection{Prioritas P1}
+
+\begin{itemize}
+    \item Menambahkan storage observability untuk audit database, Kafka, Docker log, dan WAL database client.
+    \item Menyediakan configurable retention policy per client.
+    \item Menambahkan dry-run purge untuk evidence yang sudah eligible.
+    \item Menambahkan rule-based security alert untuk mass delete, unknown actor, off-hours activity, dan connector down.
+    \item Menyusun monitored table reconciliation agar tabel baru dapat ditambahkan tanpa full reinstall.
+\end{itemize}
+
+\subsection{Prioritas P2}
+
+\begin{itemize}
+    \item Archive evidence ke object storage atau media penyimpanan WORM.
+    \item Approval workflow dua pihak untuk perubahan konfigurasi sensitif.
+    \item Webhook atau email alert.
+    \item Correlation dengan login/auth event, IP, device, dan MFA.
+    \item Sequence manifest untuk memperkuat pembuktian completeness per interval.
+\end{itemize}
+
+\section{Testing Actor Flow V2}
+
+Testing Actor Flow V2 disiapkan untuk memvalidasi actor resolution dari database client sampai dashboard. Skenario ini menggunakan database yang actor-aware, yaitu database yang memang menyediakan kolom pelaku perubahan.
+
+\begin{longtable}{p{4cm}p{9cm}}
+\toprule
+\textbf{Skenario} & \textbf{Expected Result} \\
+\midrule
+INSERT order & Actor terbaca dari field insert actor atau \texttt{created\_by}. \\
+\midrule
+UPDATE order & Actor terbaca dari field update actor atau \texttt{updated\_by}. \\
+\midrule
+DELETE atau soft delete & Actor terbaca dari field delete actor atau \texttt{deleted\_by}. \\
+\midrule
+User source masuk dari CDC & Data user muncul di Web Users atau user tracking. \\
+\midrule
+Actor berupa UUID & Sistem mencoba resolve UUID ke email atau full name dari \texttt{client\_users}. \\
+\midrule
+Verify log & Hash dan verification tetap berhasil selama data tidak berubah. \\
+\bottomrule
+\end{longtable}
+
+\section{Acceptance Criteria}
+
+Core sistem dapat dianggap siap untuk demo lanjutan jika memenuhi kriteria berikut:
+
+\begin{enumerate}
+    \item Event INSERT, UPDATE, dan DELETE dari database client muncul di dashboard.
+    \item Actor tidak lagi \texttt{Unknown} jika field mapping benar dan data actor tersedia di payload CDC.
+    \item Hash verification berhasil untuk log yang tidak berubah.
+    \item Merkle proof cocok dengan Merkle root.
+    \item Dashboard dapat menampilkan status valid, tampered, pending, dan unreachable.
+    \item Admin dapat mendaftarkan client dan mengatur mapping actor melalui dashboard.
+\end{enumerate}

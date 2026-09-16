@@ -1,0 +1,35 @@
+\chapter{Tujuan dan Arsitektur Sistem}
+
+\section{Tujuan Pengembangan}
+
+Tujuan utama pengembangan AuditChain Gateway adalah sebagai berikut:
+
+\begin{enumerate}
+    \item Menjamin integritas data pada sistem klien tanpa mengubah kode aplikasi existing secara langsung atau zero code intrusion pada aplikasi utama.
+    \item Menyediakan audit trail yang tidak dapat dimanipulasi secara diam-diam atau tamper-evident menggunakan kombinasi hashing kriptografis SHA3-256, Merkle Tree, dan blockchain anchoring.
+    \item Memberikan dashboard monitoring dan verifikasi bagi auditor, admin, dan pihak yang bertanggung jawab terhadap integritas data.
+    \item Mendukung berbagai jenis basis data klien, termasuk PostgreSQL, MySQL, Oracle, MongoDB, dan SQL Server.
+\end{enumerate}
+
+\section{Komponen Arsitektur}
+
+Sistem terdiri dari beberapa komponen utama:
+
+\begin{itemize}
+    \item \textbf{Ingestion Layer} menerima data perubahan INSERT, UPDATE, dan DELETE dari database klien melalui Kafka CDC berbasis Debezium.
+    \item \textbf{Hasher Engine} menghitung hash SHA3-256 dari setiap log yang masuk.
+    \item \textbf{Aggregator Engine} mengelompokkan log menjadi batch dan membangun Merkle Tree.
+    \item \textbf{Fabric Anchoring} mengirimkan Merkle Root ke jaringan Hyperledger Fabric.
+    \item \textbf{Verification Engine} melakukan verifikasi integritas secara berlapis, mulai dari database existence, local re-hash, agent source verification, sampai blockchain consensus.
+    \item \textbf{Dashboard Web} berbasis React menyediakan antarmuka bagi admin dan auditor untuk memonitor, mencari, memfilter, dan memverifikasi data.
+\end{itemize}
+
+\dataflowdiagram
+
+\section{Lifecycle Status Log}
+
+Setiap log yang masuk ke sistem melewati beberapa status utama. Log pertama kali diterima sebagai event, kemudian dihitung hash-nya, dikelompokkan dalam batch Merkle Tree, dan setelah itu Merkle Root dikirim ke blockchain.
+
+\lifecyclediagram
+
+Lifecycle ini penting karena dashboard dapat membedakan log yang baru diterima, log yang sudah di-hash, log yang sudah masuk batch, log yang sudah di-anchor, serta log yang perlu diperiksa karena statusnya tampered, pending, atau unreachable.

@@ -1,0 +1,76 @@
+\chapter{Progress Yang Telah Dicapai}
+
+\section{Modul Autentikasi dan Multi-tenant}
+
+Progress pada modul autentikasi dan multi-tenant meliputi:
+
+\begin{itemize}
+    \item Implementasi autentikasi tiga skema, yaitu API Key untuk komunikasi klien ke gateway, JWT Bearer untuk dashboard, dan Verify Token untuk komunikasi gateway ke agent klien.
+    \item Pendaftaran klien atau tenant baru beserta pembuatan API Key otomatis.
+    \item Pemisahan akses agar setiap tenant dapat memiliki konfigurasi dan data audit masing-masing.
+\end{itemize}
+
+\section{Modul Ingestion}
+
+Progress pada modul ingestion meliputi:
+
+\begin{itemize}
+    \item Ingestion data melalui Kafka CDC per klien dengan reconciliation otomatis setiap 15 detik.
+    \item Consumer Kafka dapat menerima event perubahan database dan meneruskannya ke proses normalisasi audit log.
+\end{itemize}
+
+\section{Modul Kriptografi dan Blockchain}
+
+Progress pada modul kriptografi dan blockchain meliputi:
+
+\begin{itemize}
+    \item Hashing SHA3-256 terhadap delapan field kanonik log audit.
+    \item Pembangunan Merkle Tree dengan dukungan proof chain lengkap dari leaf ke root.
+    \item Dukungan kasus leaf ganjil melalui mekanisme self-pairing.
+    \item Anchoring Merkle Root ke jaringan Hyperledger Fabric.
+\end{itemize}
+
+\section{Modul Verifikasi}
+
+Progress pada modul verifikasi meliputi:
+
+\begin{itemize}
+    \item Verifikasi empat lapis, yaitu eksistensi database, re-hashing lokal, verifikasi ke agent klien, dan pencocokan Merkle Proof terhadap ledger Fabric.
+    \item Dashboard menampilkan status integritas granular, seperti valid, tampered, pending, dan unreachable.
+    \item Auditor dapat melihat hasil verification untuk mengetahui apakah evidence masih sesuai dengan hash dan proof yang tersimpan.
+\end{itemize}
+
+\section{Dashboard dan Admin Panel}
+
+Progress pada dashboard dan admin panel meliputi:
+
+\begin{itemize}
+    \item Statistik ringkasan, seperti total log, pending, dan anchored.
+    \item Riwayat transaksi dengan pagination, filter, dan pencarian.
+    \item Manajemen klien, konfigurasi Kafka, dan konfigurasi agent lapis 3.
+    \item Panel monitoring CDC user klien.
+\end{itemize}
+
+\placeholderimage{Screenshot dashboard utama Audit Logs atau Overview}{Masukkan screenshot dashboard utama yang menunjukkan ringkasan log, status, dan tabel audit.}
+
+\placeholderimage{Screenshot Admin Panel Client Registry}{Masukkan screenshot halaman admin untuk registrasi client dan pengelolaan konfigurasi tenant.}
+
+\section{Ringkasan Status Modul}
+
+\begin{longtable}{p{4.2cm}p{2.7cm}p{6.8cm}}
+\toprule
+\textbf{Modul} & \textbf{Status} & \textbf{Keterangan} \\
+\midrule
+Autentikasi dan Multi-tenant & Berjalan & API Key, JWT, Verify Token, dan registrasi tenant sudah tersedia. \\
+\midrule
+Kafka CDC Ingestion & Berjalan & CDC per client sudah masuk melalui Debezium dan Kafka. \\
+\midrule
+Hashing dan Merkle Tree & Berjalan & SHA3-256 dan Merkle proof sudah menjadi bagian core evidence. \\
+\midrule
+Fabric Anchoring & Berjalan & Merkle Root dapat di-anchor ke Hyperledger Fabric. \\
+\midrule
+Dashboard Monitoring & Berjalan & Audit logs, client registry, verification, dan monitoring user tersedia. \\
+\midrule
+Actor Tracking & Dalam penyempurnaan & Mapping actor per operasi sudah masuk ke form, integrasi pipeline masih dilanjutkan. \\
+\bottomrule
+\end{longtable}

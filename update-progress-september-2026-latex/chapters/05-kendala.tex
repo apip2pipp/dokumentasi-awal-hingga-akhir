@@ -1,0 +1,84 @@
+\chapter{Kendala dan Catatan Teknis}
+
+\section{Kendala Yang Tercatat Pada Laporan September}
+
+Beberapa kendala dan catatan teknis yang masih perlu diperhatikan adalah sebagai berikut:
+
+\begin{itemize}
+    \item Consumer Kafka dan CDC masih perlu disesuaikan agar dapat membaca field mapping actor per aksi yang baru ditambahkan.
+    \item Konsistensi perlu dijaga antara data konfigurasi yang tersimpan di tabel client dengan proses normalisasi log pada \texttt{kafkaconsumer} dan \texttt{normalizer}.
+    \item Validasi lanjutan diperlukan agar fallback tetap berjalan jika field mapping per aksi kosong. Pada kondisi tersebut, sistem perlu kembali memakai actor field umum sebagai default.
+\end{itemize}
+
+\section{Catatan Tambahan Berdasarkan Review Terbaru}
+
+Selain kendala di atas, terdapat beberapa catatan tambahan yang penting untuk tahap berikutnya:
+
+\begin{enumerate}
+    \item Web Users Activity Monitoring masih melakukan pencocokan actor di frontend. Hal ini cukup untuk demonstrasi awal, tetapi untuk produksi perlu endpoint backend khusus.
+    \item Actor tracking hanya dapat akurat jika database client atau payload CDC memang menyediakan informasi actor.
+    \item Jika actor berupa ID internal, sistem perlu menyimpan actor mentah dan actor display secara terpisah agar bukti forensik tidak kehilangan nilai asli.
+    \item Belum tersedia monitoring kesehatan pipeline seperti heartbeat, connector status, consumer lag, dan replication slot lag.
+    \item Belum tersedia retention policy untuk mengatur umur log, archive, dry-run purge, dan legal hold.
+    \item Belum tersedia rule-based alert untuk kejadian seperti mass delete, actor tidak dikenal, aktivitas di luar jam kerja, atau connector down.
+\end{enumerate}
+
+\section{Batasan Sistem}
+
+AuditChain Gateway dapat membuktikan integritas evidence yang sudah diterima oleh sistem, tetapi tidak boleh diklaim sebagai sistem yang membuktikan semua kejadian secara absolut. Batasan utama yang perlu disampaikan adalah:
+
+\begin{longtable}{p{4.5cm}p{8.5cm}}
+\toprule
+\textbf{Area} & \textbf{Batasan} \\
+\midrule
+Actor attribution & Actor menunjukkan identitas yang dikirim atau diturunkan dari sistem sumber. Jika akun user dicuri, sistem belum tentu mengetahui manusia asli di balik akun tersebut. \\
+\midrule
+Completeness & Hash membuktikan data yang diterima tidak berubah, tetapi tidak otomatis membuktikan bahwa tidak ada event yang sengaja dicegah agar tidak pernah masuk. \\
+\midrule
+Pipeline outage & Jika connector CDC mati sebelum perubahan data dibaca, sistem membutuhkan heartbeat dan lag monitoring untuk mendeteksi gap. \\
+\midrule
+Blockchain anchoring & Blockchain menyimpan anchor berupa Merkle Root. Raw evidence dan Merkle proof tetap perlu dikelola dengan retention dan archive yang benar. \\
+\midrule
+Database client & Actor hanya dapat dibaca jika database client atau payload CDC memang menyediakan informasi pelaku perubahan. \\
+\bottomrule
+\end{longtable}
+
+\section{Batasan Kasus Keamanan}
+
+AuditChain Gateway bukan sistem pencegah serangan dan bukan alat deteksi hacker secara langsung. Sistem ini berperan sebagai audit trail middleware yang merekam jejak perubahan data, menjaga integritas evidence, dan membantu proses investigasi setelah suatu aktivitas terjadi.
+
+Dengan kata lain, jika sistem client dibobol oleh pihak tidak berwenang, AuditChain tidak otomatis mengetahui bahwa pelaku tersebut adalah hacker. AuditChain hanya dapat mencatat perubahan yang terjadi selama perubahan tersebut masih melewati database, connector CDC, agent, atau pipeline Kafka yang dipantau.
+
+\begin{longtable}{p{5cm}p{8cm}}
+\toprule
+\textbf{Skenario} & \textbf{Yang Dapat Dilakukan AuditChain} \\
+\midrule
+Akun aplikasi client dicuri & AuditChain dapat mencatat perubahan data dan actor akun yang dipakai, tetapi belum tentu mengetahui bahwa akun tersebut sedang digunakan oleh penyerang. \\
+\midrule
+Hacker melakukan CRUD melalui aplikasi client & AuditChain dapat merekam INSERT, UPDATE, atau DELETE yang terjadi, selama event masuk melalui pipeline CDC/Kafka. \\
+\midrule
+Hacker memakai credential database langsung & AuditChain dapat menangkap perubahan row jika tabel tersebut masuk cakupan CDC, tetapi identitas manusia di balik akses tersebut belum tentu diketahui. \\
+\midrule
+Connector CDC dimatikan sebelum serangan & AuditChain tidak dapat merekam event yang tidak pernah sampai ke pipeline. Sistem membutuhkan heartbeat dan pipeline monitoring untuk mendeteksi adanya gap atau outage. \\
+\midrule
+Raw data client diubah sebelum masuk AuditChain & AuditChain hanya dapat memverifikasi evidence yang sudah diterima. Perubahan yang terjadi sebelum data masuk ke sistem perlu dianalisis dari sisi client. \\
+\midrule
+Log pusat AuditChain dimanipulasi setelah tersimpan & AuditChain dapat membantu mendeteksi mismatch melalui hash, Merkle proof, dan blockchain anchor untuk evidence yang masih tersedia. \\
+\bottomrule
+\end{longtable}
+
+Kesimpulan batasan ini adalah bahwa AuditChain berfungsi sebagai sistem pencatatan, pembuktian integritas, dan pendukung investigasi. AuditChain tidak menggantikan firewall, antivirus, IAM, MFA, SIEM, EDR, backup, atau mekanisme keamanan internal milik client.
+
+\section{Catatan Keamanan Pra-Produksi}
+
+Sebelum sistem digunakan pada lingkungan yang lebih serius, beberapa aspek keamanan perlu direview:
+
+\begin{itemize}
+    \item CORS whitelist.
+    \item Validasi dan rotasi JWT secret.
+    \item Penyimpanan dan rotasi API Key.
+    \item Rate limiting endpoint publik.
+    \item Pembagian role admin, auditor, dan tenant admin.
+    \item Audit trail untuk perubahan konfigurasi client.
+    \item Validasi input untuk field actor mapping.
+\end{itemize}

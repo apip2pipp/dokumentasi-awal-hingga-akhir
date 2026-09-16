@@ -1,0 +1,222 @@
+\documentclass[12pt,a4paper]{report}
+
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\setsansfont{Arial}
+\setmonofont{Consolas}
+
+\usepackage[indonesian]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit}
+
+\geometry{left=3cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+\hypersetup{
+    colorlinks=false,
+    pdfborder={0 0 0}
+}
+
+\definecolor{softgray}{HTML}{F5F5F5}
+\definecolor{linegray}{HTML}{BFBFBF}
+\definecolor{boxgray}{HTML}{EFEFEF}
+
+\titleformat{\chapter}
+  {\normalfont\bfseries\Large}
+  {\thechapter.}{0.6em}{}
+\titleformat{\section}
+  {\normalfont\bfseries\large}
+  {\thesection}{0.6em}{}
+\titleformat{\subsection}
+  {\normalfont\bfseries\normalsize}
+  {\thesubsection}{0.6em}{}
+\titlespacing*{\chapter}{0pt}{-8pt}{18pt}
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+\pagestyle{fancy}
+\setlength{\headheight}{15pt}
+\fancyhf{}
+\lhead{AuditChain Gateway}
+\rhead{Progress September 2026}
+\cfoot{\thepage}
+
+\setlist[itemize]{leftmargin=1.1cm,itemsep=2pt,topsep=4pt}
+\setlist[enumerate]{leftmargin=1.1cm,itemsep=2pt,topsep=4pt}
+\renewcommand{\arraystretch}{1.2}
+\emergencystretch=2em
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\newcommand{\placeholderimage}[2]{
+    \begin{figure}[H]
+        \centering
+        \fbox{
+            \begin{minipage}[c][4.2cm][c]{0.88\textwidth}
+                \centering
+                \textbf{Placeholder Gambar}\\[0.25cm]
+                #1\\[0.15cm]
+                \small #2
+            \end{minipage}
+        }
+        \caption{#1}
+    \end{figure}
+}
+
+\tikzset{
+    acbox/.style={draw=black, rounded corners=2pt, fill=boxgray, align=center, minimum height=1cm, text width=2.6cm, font=\small},
+    acsmall/.style={draw=black, rounded corners=2pt, fill=boxgray, align=center, minimum height=0.85cm, text width=2.25cm, font=\small},
+    acarrow/.style={-Latex, thick}
+}
+
+\newcommand{\architecturediagram}{
+    \begin{figure}[H]
+        \centering
+        \resizebox{0.98\textwidth}{!}{
+        \begin{tikzpicture}[node distance=1.1cm and 1.1cm]
+            \node[acbox] (client) {Sistem Klien\\SIMRS / Geospasial};
+            \node[acbox, right=of client] (cdc) {Agent CDC\\Debezium};
+            \node[acbox, right=of cdc] (kafka) {Kafka\\Event Stream};
+            \node[acbox, right=of kafka] (gateway) {AuditChain\\Gateway};
+            \node[acbox, below=of gateway] (db) {Audit DB\\audit\_logs};
+            \node[acbox, right=of gateway] (fabric) {Hyperledger\\Fabric};
+            \node[acbox, above=of gateway] (dashboard) {Dashboard\\Admin / Auditor};
+
+            \draw[acarrow] (client) -- (cdc);
+            \draw[acarrow] (cdc) -- (kafka);
+            \draw[acarrow] (kafka) -- (gateway);
+            \draw[acarrow] (gateway) -- (db);
+            \draw[acarrow] (gateway) -- (fabric);
+            \draw[acarrow] (dashboard) -- (gateway);
+        \end{tikzpicture}
+        }
+        \caption{Diagram arsitektur umum sistem AuditChain Gateway}
+    \end{figure}
+}
+
+\newcommand{\dataflowdiagram}{
+    \begin{figure}[H]
+        \centering
+        \resizebox{0.98\textwidth}{!}{
+        \begin{tikzpicture}[node distance=0.9cm and 0.7cm]
+            \node[acsmall] (db) {Database\\Klien};
+            \node[acsmall, right=of db] (cdc) {CDC Event};
+            \node[acsmall, right=of cdc] (normal) {Normalizer};
+            \node[acsmall, right=of normal] (hash) {Hasher\\SHA3-256};
+            \node[acsmall, below=of hash] (merkle) {Merkle\\Aggregator};
+            \node[acsmall, left=of merkle] (auditdb) {Audit Logs};
+            \node[acsmall, right=of merkle] (ledger) {Fabric\\Ledger};
+            \node[acsmall, below=of auditdb] (verify) {Verification\\Engine};
+
+            \draw[acarrow] (db) -- (cdc);
+            \draw[acarrow] (cdc) -- (normal);
+            \draw[acarrow] (normal) -- (hash);
+            \draw[acarrow] (hash) -- (auditdb);
+            \draw[acarrow] (auditdb) -- (merkle);
+            \draw[acarrow] (merkle) -- (ledger);
+            \draw[acarrow] (auditdb) -- (verify);
+            \draw[acarrow] (ledger) |- (verify);
+        \end{tikzpicture}
+        }
+        \caption{Diagram alur data dari database klien hingga blockchain}
+    \end{figure}
+}
+
+\newcommand{\lifecyclediagram}{
+    \begin{figure}[H]
+        \centering
+        \resizebox{0.9\textwidth}{!}{
+        \begin{tikzpicture}[node distance=0.8cm and 0.8cm]
+            \node[acsmall] (received) {RECEIVED};
+            \node[acsmall, right=of received] (hashed) {HASHED};
+            \node[acsmall, right=of hashed] (aggregated) {MERKLE\\BATCH};
+            \node[acsmall, right=of aggregated] (anchored) {ANCHORED};
+            \node[acsmall, below=of aggregated] (verified) {VERIFIED};
+            \node[acsmall, below=of hashed] (tampered) {TAMPERED /\\UNREACH-\\ABLE};
+
+            \draw[acarrow] (received) -- (hashed);
+            \draw[acarrow] (hashed) -- (aggregated);
+            \draw[acarrow] (aggregated) -- (anchored);
+            \draw[acarrow] (anchored) |- (verified);
+            \draw[acarrow] (hashed) -- (tampered);
+        \end{tikzpicture}
+        }
+        \caption{Diagram lifecycle status log}
+    \end{figure}
+}
+
+\newcommand{\roadmapdiagram}{
+    \begin{figure}[H]
+        \centering
+        \resizebox{0.9\textwidth}{!}{
+        \begin{tikzpicture}[node distance=0.9cm and 0.8cm]
+            \node[acbox] (p0) {P0\\Core Completion\\Actor + Testing};
+            \node[acbox, right=of p0] (p1) {P1\\Observability\\Retention + Alerts};
+            \node[acbox, right=of p1] (p2) {P2\\Archive\\Approval + Correlation};
+            \draw[acarrow] (p0) -- (p1);
+            \draw[acarrow] (p1) -- (p2);
+        \end{tikzpicture}
+        }
+        \caption{Diagram roadmap pengembangan AuditChain Gateway}
+    \end{figure}
+}
+
+\lstdefinestyle{codeblock}{
+    backgroundcolor=\color{softgray},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    rulecolor=\color{linegray},
+    columns=fullflexible
+}
+\lstset{style=codeblock}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{1.3cm}
+    {\Large \textbf{LAPORAN PROGRESS PENGEMBANGAN SISTEM}}\\[0.4cm]
+    {\LARGE \textbf{AuditChain Gateway}}\\[0.2cm]
+    {\large Blockchain-based Audit Trail Middleware}\\[1.2cm]
+
+    \rule{0.78\textwidth}{0.5pt}\\[0.8cm]
+    \begin{tabular}{>{\bfseries}p{4cm}p{8cm}}
+        Nama Proyek & AuditChain Gateway \\
+        Jenis Sistem & Middleware Audit Trail berbasis Blockchain (Hyperledger Fabric) \\
+        Periode Laporan & September 2026 \\
+        Versi Dokumen & 1.1 \\
+        Disusun oleh & [isi nama] \\
+        Tanggal & [isi tanggal] \\
+    \end{tabular}\\[0.8cm]
+    \rule{0.78\textwidth}{0.5pt}
+
+    \vfill
+    {\normalsize Dokumentasi awal, progress, dan update terbaru sistem}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\input{chapters/01-ringkasan}
+\input{chapters/02-tujuan-arsitektur}
+\input{chapters/03-progress-dicapai}
+\input{chapters/04-update-terbaru}
+\input{chapters/05-kendala}
+\input{chapters/06-roadmap}
+\input{chapters/07-lampiran}
+
+\end{document}
